@@ -1,0 +1,5 @@
+west:
+  command: /home/nhuttomorrow/zephyrproject/.venv/bin/west build -p always -b black_f407ve
+    sample_app
+  topdir: /home/nhuttomorrow/zephyrproject
+  version: 1.5.0

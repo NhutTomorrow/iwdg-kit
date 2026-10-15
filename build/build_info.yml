@@ -1,0 +1,64 @@
+cmake:
+  application:
+    configuration-dir: '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app'
+    source-dir: '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app'
+  board:
+    name: 'black_f407ve'
+    path:
+     - '/home/nhuttomorrow/zephyrproject/zephyr/boards/others/black_f407ve'
+    qualifiers: 'stm32f407xx'
+    revision: ''
+  devicetree:
+    bindings-dirs:
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/bindings'
+    files:
+     - '/home/nhuttomorrow/zephyrproject/zephyr/boards/others/black_f407ve/black_f407ve.dts'
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/app.overlay'
+    include-dirs:
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/ambiq/dts'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/atmel/include'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/bouffalolab/include'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/bouffalolab/include/zephyr'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/gigadevice/include'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/microchip/include'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/microchip/dts'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/nuvoton/dts'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/nxp/dts'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/stm32/dts'
+     - '/home/nhuttomorrow/zephyrproject/modules/hal/ti/dts'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/include'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/include/zephyr'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/common'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/vendor'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/rx'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/x86'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/xtensa'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/sparc'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/riscv'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/posix'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/arm64'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/arm'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts/arc'
+     - '/home/nhuttomorrow/zephyrproject/zephyr/dts'
+    user-files:
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/app.overlay'
+  kconfig:
+    extra-user-files:
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/../conf/wdt.fragment.conf'
+    files:
+     - '/home/nhuttomorrow/zephyrproject/zephyr/boards/others/black_f407ve/black_f407ve_defconfig'
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/prj.conf'
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/../conf/wdt.fragment.conf'
+    user-files:
+     - '/home/nhuttomorrow/BKIT/Global_Tech/iwdg-kit/sample_app/prj.conf'
+  toolchain:
+    name: 'zephyr'
+    path: '/home/nhuttomorrow/zephyr-sdk-0.17.2'
+  zephyr:
+    version: '4.2.0'
+    zephyr-base: '/home/nhuttomorrow/zephyrproject/zephyr'
+version: '0.1.0'
+west:
+  command: '/home/nhuttomorrow/zephyrproject/.venv/bin/west build -p always -b black_f407ve sample_app'
+  topdir: '/home/nhuttomorrow/zephyrproject'
+  version: '1.5.0'

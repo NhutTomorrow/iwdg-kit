@@ -1,0 +1,2 @@
+# Load Zephyr board Kconfig descriptions.
+osource "/home/nhuttomorrow/zephyrproject/zephyr/boards/others/black_f407ve/Kconfig"
