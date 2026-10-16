@@ -5,7 +5,7 @@
 #include <zephyr/drivers/watchdog.h>
 #include <zephyr/sys/printk.h>
 
-/* Xác định node Watchdog từ Devicetree cho STM32 */
+/* Determine Watchdog node from Devicetree for STM32 */
 #if DT_HAS_COMPAT_STATUS_OKAY(st_stm32_watchdog)
 #define WDT_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(st_stm32_watchdog)
 #elif DT_NODE_HAS_STATUS_OKAY(DT_ALIAS(watchdog0))
@@ -34,36 +34,38 @@ int wdt_token_init(uint32_t timeout_ms)
 	}
 
 	if (wdt_dev == NULL || !device_is_ready(wdt_dev)) {
-		printk("[WDT] Loi: Watchdog device chua san sang hoac khong ton tai!\n");
+		printk("[WDT] Error: Watchdog device is not ready or does not exist!\n");
 		return -ENODEV;
 	}
 
-	/* Cấu hình cửa sổ timeout cho IWDG:
-	 * STM32 IWDG là independent watchdog (không có window min),
-	 * không hỗ trợ interrupt callback trước khi reset SOC.
+	/* Configure IWDG timeout window:
+	 * STM32 IWDG is an independent watchdog (no minimum window),
+	 * and does not support interrupt callbacks prior to SOC reset.
 	 */
 	wdt_config.flags = WDT_FLAG_RESET_SOC;
 	wdt_config.window.min = 0U;
 	wdt_config.window.max = timeout_ms;
 	wdt_config.callback = NULL;
 
-	/* Cài đặt timeout và nhận channel ID */
+	/* Install timeout configuration and retrieve channel ID */
 	ret = wdt_install_timeout(wdt_dev, &wdt_config);
-	if (ret >= 0) {
-		wdt_channel = ret;
+	if (ret < 0) {
+		printk("[WDT] Error installing timeout: %d\n", ret);
+		return ret;
 	}
+	wdt_channel = ret;
 
-	/* Kích hoạt Watchdog (nếu đã kích hoạt từ trước reset thì bỏ qua lỗi -EBUSY / -EALREADY) */
+	/* Start Watchdog (ignore -EBUSY / -EALREADY if previously started prior to reset) */
 	ret = wdt_setup(wdt_dev, 0);
 	if (ret < 0 && ret != -EBUSY && ret != -EALREADY) {
-		printk("[WDT] Loi khi setup watchdog: %d\n", ret);
+		printk("[WDT] Error setting up watchdog: %d\n", ret);
 		return ret;
 	}
 
-	/* Feed ngay lập tức để nạp lại đầy đủ bộ đếm counter */
+	/* Feed immediately to fully reload the down-counter */
 	wdt_feed(wdt_dev, wdt_channel);
 
-	printk("[WDT] Khoi tao IWDG thanh cong! Timeout: %u ms, Channel ID: %d\n",
+	printk("[WDT] IWDG initialized successfully! Timeout: %u ms, Channel ID: %d\n",
 	       timeout_ms, wdt_channel);
 
 	return 0;
@@ -77,7 +79,7 @@ void wdt_token_feed(void)
 
 	int ret = wdt_feed(wdt_dev, wdt_channel);
 	if (ret != 0) {
-		/* Thử feed channel 0 dự phòng */
+		/* Fallback: try feeding channel 0 */
 		wdt_feed(wdt_dev, 0);
 	}
 }
@@ -85,9 +87,9 @@ void wdt_token_feed(void)
 #if defined(CONFIG_TOKEN_DEV) || defined(WDT_TOKEN_TEST)
 void wdt_token_force_hang_for_test(void)
 {
-	printk("[WDT] !!! TEST: Buoc he thong treo (khong feed) de kich hoat Watchdog Reset !!!\n");
+	printk("[WDT] !!! TEST: Entering infinite loop to trigger Watchdog Reset !!!\n");
 	for (;;) {
-		/* Vòng lặp vô tận, chiếm CPU để không cho main loop gọi wdt_token_feed() */
+		
 	}
 }
 #endif

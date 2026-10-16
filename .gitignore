@@ -1,0 +1,18 @@
+# Build directories
+build/
+twister-out*/
+zephyr/
+
+# IDE and Editor configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Archive and temporary files
+*.zip
+*.tar.gz
+*.log
+

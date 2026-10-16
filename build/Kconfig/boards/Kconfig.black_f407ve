@@ -1,2 +1,0 @@
-# Load board Kconfig descriptions.
-osource "/home/nhuttomorrow/zephyrproject/zephyr/boards/others/black_f407ve/Kconfig.black_f407ve"
