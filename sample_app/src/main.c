@@ -9,24 +9,24 @@
 
 #include "wdt_token.h"
 
-/* Cấu hình thời gian theo yêu cầu bài toán:
- * - Timeout: 4000 ms (4 giây, yêu cầu: 3000ms - 5000ms)
- * - Chu kỳ Feed: 1000 ms (1 giây, yêu cầu: < Timeout / 2)
+/* Timing configuration per task requirements:
+ * - Timeout: 4000 ms (4 seconds, requirement: 3000ms - 5000ms)
+ * - Feed Interval: 1000 ms (1 second, requirement: < Timeout / 2)
  */
 #define WDT_TIMEOUT_MS          4000U
 #define WDT_FEED_INTERVAL_MS    1000U
 
 /*
- * Cấu hình kiểm thử:
- * Sau 10 chu kỳ (~10 giây), hệ thống sẽ gọi wdt_token_force_hang_for_test()
- * để chứng minh Watchdog tự động reset vi điều khiển khi bị treo.
+ * Test configuration:
+ * After 120 cycles (~120 seconds), system calls wdt_token_force_hang_for_test()
+ * to verify that the Watchdog automatically resets the MCU when hung.
  */
-#define TEST_HANG_AFTER_CYCLES  10
+#define TEST_HANG_AFTER_CYCLES  120
 
 /*
- * Các chân LED trên các phiên bản board STM32F103RCT6 Mini:
- * - Bản chuẩn STM32F103RC Mini V2.0: LED1 nối PA8, LED2 nối PD2 (Active-Low)
- * - Bản tối giản (Blue/Black style): LED nối PC13 (Active-Low)
+ * LED pin configurations across STM32 board variants:
+ * - STM32F103RC Mini V2.0: LED1 on PA8, LED2 on PD2 (Active-Low)
+ * - Blue/Black pill style: LED on PC13 (Active-Low)
  */
 static const struct device *const gpioa_dev = DEVICE_DT_GET_OR_NULL(DT_NODELABEL(gpioa));
 static const struct device *const gpioc_dev = DEVICE_DT_GET_OR_NULL(DT_NODELABEL(gpioc));
@@ -41,7 +41,7 @@ int main(void)
 	uint32_t loop_count = 0;
 	int led_state = 1;
 
-	/* 1. Khởi tạo tất cả các chân LED ứng viên trên board F103RC */
+	/* 1. Initialize candidate LED pins on board */
 	if (gpioa_dev && device_is_ready(gpioa_dev)) {
 		gpio_pin_configure(gpioa_dev, PIN_LED_D2, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
 	}
@@ -49,18 +49,18 @@ int main(void)
 		gpio_pin_configure(gpioa_dev, PIN_LED_D3, GPIO_OUTPUT_ACTIVE | GPIO_ACTIVE_LOW);
 	}
 
-	/* 2. Khởi tạo Watchdog và Feed ngay */
+	/* 2. Initialize Watchdog */
 	wdt_token_init(WDT_TIMEOUT_MS);
-	wdt_token_feed();
+	// wdt_token_feed();
 
 #if defined(CONFIG_USB_DEVICE_STACK)
-	/* 3. Kích hoạt cổng USB Serial ảo trên Type-C */
+	/* 3. Enable USB CDC-ACM Virtual Serial Port on Type-C */
 	const struct device *const usb_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_console));
 	uint32_t dtr = 0;
 	int wait_time = 0;
 
 	if (usb_enable(NULL) == 0) {
-		/* Đợi người dùng mở terminal (tối đa 2.5s) và feed watchdog liên tục */
+		/* Wait for terminal connection (up to 2.5s) and feed watchdog continuously */
 		while (!dtr && wait_time < 25) {
 			uart_line_ctrl_get(usb_dev, UART_LINE_CTRL_DTR, &dtr);
 			wdt_token_feed();
@@ -74,25 +74,25 @@ int main(void)
 	printk("==================================================\n");
 	printk("***   STM32 IWDG Sample Application Started   ***\n");
 	printk("==================================================\n");
-	printk("Watchdog da khoi tao thanh cong:\n");
+	printk("Watchdog initialized successfully:\n");
 	printk(" - Timeout: %u ms\n", WDT_TIMEOUT_MS);
-	printk(" - Chu ky Feed: %u ms\n", WDT_FEED_INTERVAL_MS);
+	printk(" - Feed Interval: %u ms\n", WDT_FEED_INTERVAL_MS);
 #if (TEST_HANG_AFTER_CYCLES > 0) && (defined(CONFIG_TOKEN_DEV) || defined(WDT_TOKEN_TEST))
-	printk(" - Che do test: Buoc treo sau %d chu ky (~%d giay)\n",
+	printk(" - Test Mode: Force hang after %d cycles (~%d seconds)\n",
 	       TEST_HANG_AFTER_CYCLES, (TEST_HANG_AFTER_CYCLES * WDT_FEED_INTERVAL_MS) / 1000);
 #else
-	printk(" - Che do test: Chay binh thuong khong treo\n");
+	printk(" - Test Mode: Normal operation (no forced hang)\n");
 #endif
 	printk("--------------------------------------------------\n");
 
-	/* 4. Vòng lặp chính */
+	/* 4. Main loop */
 	while (1) {
 		loop_count++;
 
-		/* Feed Watchdog mỗi chu kỳ lặp */
+		/* Feed Watchdog every loop cycle */
 		wdt_token_feed();
 
-		/* Đảo trạng thái đèn LED */
+		/* Toggle LED state */
 		led_state = !led_state;
 		if (gpioa_dev && device_is_ready(gpioa_dev)) {
 			gpio_pin_set(gpioa_dev, PIN_LED_D2, led_state);
@@ -100,17 +100,16 @@ int main(void)
 		if (gpiod_dev && device_is_ready(gpiod_dev)) {
 			gpio_pin_set(gpioa_dev, PIN_LED_D3, led_state);
 		}
-		
 
-		printk("[APP] Loop #%u: Da feed Watchdog thanh cong (LED: %s)\n",
-		       loop_count, led_state ? "SANG" : "TAT");
+		printk("[APP] Loop #%u: Watchdog fed successfully (LED: %s)\n",
+		       loop_count, led_state ? "ON" : "OFF");
 
 #if (TEST_HANG_AFTER_CYCLES > 0) && (defined(CONFIG_TOKEN_DEV) || defined(WDT_TOKEN_TEST))
 		if (loop_count >= TEST_HANG_AFTER_CYCLES) {
-			printk("\n[APP] !!! BUOC TREO HE THONG DE TEST WATCHDOG RESET !!!\n");
-			printk("[APP] Dung feed, MCU se tu Reset sau dung ~%u ms...\n", WDT_TIMEOUT_MS);
+			printk("\n[APP] !!! FORCING SYSTEM HANG TO TEST WATCHDOG RESET !!!\n");
+			printk("[APP] Stopping feed, MCU will reset in ~%u ms...\n", WDT_TIMEOUT_MS);
 
-			/* Treo hệ thống để kiểm chứng Watchdog Reset */
+			/* Force infinite loop to verify Watchdog Reset */
 			wdt_token_force_hang_for_test();
 		}
 #endif
